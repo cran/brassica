@@ -1,0 +1,436 @@
+\documentclass[a4paper]{article}
+
+%\usepackage{Sweave}
+%\VignetteIndexEntry{BASIC}
+%\VignetteKeywords{interpreter}
+%\VignetteKeywords{historical}
+%\VignettePackage{brassica}
+
+\setlength{\parindent}{0em}
+\addtolength{\topmargin}{-1em}
+\addtolength{\textheight}{1em}
+
+\newcommand{\yspace}{\vspace{1.5ex}}
+\newcommand{\ib}[1]{\texttt{#1}}
+\newcommand{\iib}[1]{\hspace*{1em}\texttt{#1}}
+
+\usepackage{alltt}
+
+\newcommand{\basic}[1]{\begin{alltt}#1\end{alltt}}
+
+\newcommand{\bit}[2]{\noindent%
+\begin{minipage}[t]{.3\textwidth}\vspace{1pt}\basic{#1}\end{minipage}%
+\begin{minipage}[t]{.7\textwidth}\vspace{0pt}#2\end{minipage}\yspace}
+
+\newcommand{\mat}[2]{\noindent%
+\begin{minipage}[t]{.3\textwidth}\vspace{1pt}\basic{#1}\end{minipage}%
+\begin{minipage}[t]{.7\textwidth}\vspace{0pt}\basic{#2}\end{minipage}\yspace}
+
+\newenvironment{example}{\begin{alltt}\addtolength{\leftskip}{3em}}{\end{alltt}}
+
+\title{Brassica BASIC}
+\author{Mike Lee}
+
+\begin{document}
+\maketitle
+
+\noindent
+Brassica interprets an expanded subset of 1975 Altair/Microsoft BASIC.\\
+This enables running programs of historical interest in their prim\ae{}val
+state.
+
+\section{Lines}
+Line numbers label branching destinations, but are not strictly necessary
+elsewhere.
+Blank lines, numbered or not, are allowed.
+Lines beginning with \ib{\#} are comments.
+Colons separate multiple statements on the same line.
+The presence or absence of horizontal whitespace makes no difference anywhere
+outside of string literals, \ib{DATA} values, and line numbers.
+Aside from the names of variables, the interpreter is entirely case-insensitive.
+
+\begin{example}
+\# infinite loop
+100
+110 let x = x + 1
+\phantom{120} go to 100 : REM unnumbered line
+\end{example}
+
+\section{Variables}
+Legitimate names consist of a letter followed by zero or more alpha\-numeric
+characters, possibly followed by a data-type indicator (\ib{\%} or \ib{\$}),
+possibly followed by array subscripts.
+Names are case-sensitive, not limited to two characters, and may not contain
+reserved words (\ib{TO}, \ib{INT}, etc.).
+Arrays of character strings are supported.
+The six variables below are distinct and may coexist.
+Subscripts begin from zero.
+All BASIC variables are global in scope.
+Variables may be referenced without prior definition, in which case numbers are
+initialised to \ib{0}, and strings to \ib{""}.
+Referencing an undimensioned array \ib{DIM}s it as \ib{0} -- \ib{10} on each
+subscript.
+
+\vspace{2ex}
+\bit{X}{A numerical scalar.}
+\bit{X\%}{An integer-constrained scalar (signed).}
+\bit{X\$}{A character string.}
+\bit{X(10)}{A scalar element of a one-dimensional numerical array.}
+\bit{X\%(4,6)}{A scalar element of a two-dimensional integer array.}
+\bit{X\$(0,0,0)}{One string of a three-dimensional array of strings.}
+
+\section{Operators}
+In decreasing order of precedence:
+
+\vspace{2ex}
+\bit{(\ldots)}{Bracketing (grouping operation, including functions).}
+\bit{\string^}{Exponentiation.}
+\bit{\textnormal{unary} + -}{Identity and negation.}
+\bit{* /}{Multiplication and division.}
+\bit{+ -}{Addition and subtraction.}
+\bit{= <> < <= > >=}{
+Equal to, not equal to, less than, less than or equal to, greater than, greater
+than or equal to.
+}
+\bit{NOT}{Bitwise logical NOT.}
+\bit{AND}{Bitwise logical AND.}
+\bit{OR}{Bitwise logical OR.}
+\bit{XOR}{Bitwise logical XOR.}
+\newline
+
+\vspace{2ex}
+Operators of equal precedence, such as the six relationals, are applied in
+left-to-right order.
+The equivalence operator is a single \ib{=}, which is also used for the
+assignment operator immediately after an expressed or implied \ib{LET}.
+Logically false relations evaluate to \ib{0}, true relations to \ib{-1}.
+Whitespace is ignored; be wary of \ib{F OR} and \ib{X OR}.
+Consecutive operators need not be separated by parentheses, but see below.
+
+\vspace{3ex}
+Relational operations are allowed between strings, and are case-insensitive
+(hence, \ib{"a" = "A"}).
+Addition of strings performs concatenation.
+Arguments of logical operators are coerced to integers.
+\ib{NOT(X\%) = -(X\% + 1)}.
+
+\vspace{3ex}
+The unary negation and logical NOT operators imply a bracketing extending to
+(not around) the next operator of lower precedence.
+The unary identity operator, \ib{+}, acts only on the value to its immediate right.
+In effect, the unaries act as functions.
+Hence;
+
+\begin{example}
+A\string^B\string^C\quad=\quad{}A\string^+B\string^C\quad=\quad(A\string^B)\string^C
+\end{example}
+while
+\begin{example}
+A\string^--B\string^C\quad=\quad{}A\string^-(-(B\string^C))\quad=\quad{}A\string^(B\string^C)
+\end{example}
+and furthermore,
+\begin{example}
+A * NOT B + NOT C + NOT D + E AND F
+\phantom{=}=\quad{}A * NOT(B + NOT(C + NOT(D + E))) AND F
+\phantom{=}=\quad{}A * ((NOT B) - (NOT C) + (NOT D) - E) AND F
+\end{example}
+
+\newpage
+\section{Commands}
+
+All BASIC statements begin with a command keyword.
+The absence of an overt keyword implies \ib{LET}.
+\yspace
+
+\bit{CLEAR}{
+Deletes all variables, arrays, and user-defined functions.
+May be followed by a positive number, which is ignored.
+}\yspace
+
+\bit{DATA}{
+Lists constant values for \ib{READ}ing.\\
+\iib{DATA 3, 4.5E-2, REM, A B C, " D,:E "}\\
+\iib{REM two numbers and three strings}
+}\yspace
+
+\bit{DEF FN}{
+Defines a custom function.
+\ib{FN} forms the beginning of its (case-sensitive) name, which must end with
+the appropriate return-type indicator (\ib{\$}, \ib{\%}, or none).\\
+\iib{DEF FNA(X) = X + C}\\
+\iib{DEF fnb\$(A\$,n) = MID\$(A\$,n,1)}\\
+\iib{PRINT FNA(7) fnb\$("ABC",2)}
+}\yspace
+
+\bit{DELAY}{
+Suspends execution for a time.
+(Replaces delay loops.)\\
+\iib{DELAY 2 ~:REM waits two seconds}
+}\yspace
+
+\bit{DIM}{
+Specifies the domain of an array variable's subscripts.
+Each subscript runs from zero to its specified limit (with both extremes
+included).\\
+\iib{DIM A\$(5), X(2,6)}\\
+\iib{REM X has 3 * 7 = 21 elements}
+}\yspace
+
+\bit{END}{
+Terminates execution quietly.
+}\yspace
+
+\bit{FOR\ldots{}TO\ldots{}STEP}{
+Begins a loop, iterating over some (non-array) variable.
+The expression between \ib{FOR} and \ib{TO} is an implied \ib{LET}, defining the
+iterator.
+The \ib{STEP} (increment) is optional, and defaults to \ib{1}.
+The termination threshold, appearing after \ib{TO}, is locked-in as a constant
+when the loop is initiated.\\
+\iib{X=3:~FOR I=1 TO X:~PRINT I:~X=10:~NEXT}\\
+\iib{REM prints 1, 2, 3.}\yspace\\
+Because the loop-termination condition is only tested at the bottom (by the
+\ib{NEXT}), loops always execute at least once.\\
+\iib{FOR I = 9 TO 5 STEP +2:~PRINT I:~NEXT}\\
+\iib{REM this prints 9.}\yspace\\
+Beginning a new loop terminates any prior loop over the same iterator within the
+same subroutine (see \ib{GOSUB}).
+Termination of a loop also terminates any loops nested within it.\\
+\iib{FOR I=1 TO 3:~FOR J=1 TO 3:~FOR I=1 TO 3}\\
+\iib{NEXT I:~NEXT J}\\
+\iib{REM next-without-for error at the `NEXT J'}
+}\yspace
+
+\bit{GOSUB}{
+Branches to a new subroutine.
+The destination must be a constant literal line number.
+While variables have global scope, loops are only visible within the subroutine
+they were initiated in.\\
+\iib{100 FOR I=1 TO 3:~GOSUB 200}\\
+\iib{200 NEXT :REM next-without-for error here}\yspace\\
+\iib{10 REM this prints 1 2 5 6 8}\\
+\iib{20 FOR I=1 TO 8:~PRINT I;}\\
+\iib{30 IF I=2 THEN GOSUB 50}\\
+\iib{40 NEXT I:~PRINT:~END}\\
+\iib{50 FOR I=5 TO 6:~PRINT I;:~NEXT I}\\
+\iib{60 RETURN}
+}\yspace
+
+\bit{GOTO}{
+Branches to a line number.
+The destination must be a constant literal.
+The word `\ib{GO}' is reserved by BASIC in its own right.\\
+\iib{GOTO 840}
+}\yspace
+
+\bit{IF\ldots{}GOTO}{
+Conditional branching.
+If the condition is true, execution jumps to the specified line.
+Otherwise, execution continues with the next line.
+Non-zero numbers and non-empty strings are considered true.\\
+\iib{IF X > 5 GOTO 1000}
+}\yspace
+
+\bit{IF\ldots{}THEN}{
+Conditional execution.
+If the condition is true, execution continues along the same line.
+If the condition is false, execution moves to the next line.
+Non-zero numbers and non-empty strings are considered true.\\
+\iib{IF X > 5 THEN 1000 :REM same as IF - GOTO}\yspace\\
+\iib{10 REM GOTO does the work of ELSE}\\
+\iib{20 IF A\$ THEN X=X+1:~GOSUB 500:~GOTO 40}\\
+\iib{30 X=0:~B\$="Z"}\\
+\iib{40 REM line 30 is the ELSE block}
+}\yspace
+
+\bit{INPUT}{
+Accepts input from the terminal.
+The user is automatically re-prompted on entering the wrong type or number of
+comma-separated values.
+(To enter a string with a comma in it, wrap it in double quotes.)\\
+\iib{INPUT ~~~~~~~~~:REM just wait for enter}\\
+\iib{INPUT X(4),Y\$ ~:REM expects two values}\yspace\\
+An optional string-literal prompt can be printed.
+It must be followed by either a semicolon (append the usual question mark) or a
+comma (no question mark).\\
+\iib{INPUT "Coordinates";X,Y}\\
+\iib{INPUT "[press enter]",}
+}\yspace
+
+\bit{LET}{
+Assigns a value to a variable.
+The keyword is optional.
+The data types of value and variable must match.
+Non-integer numbers are floored when necessary.\\
+\iib{LET A\$ = "Hi!" ~:REM assigns "Hi!" to A\$}\\
+\iib{X = "A" = "a" ~~:REM assigns -1 to X}\\
+\iib{N\%(2.3) = 4.9 ~~:REM assigns 4 to N\%(2)}
+}\yspace
+
+\bit{NEXT}{
+Bottom of a loop.
+Increments the iteration variable by the \ib{STEP} defined when the loop was
+initiated.
+If the variable then exceeds the termination threshold, the loop terminates and
+execution continues onward.
+Otherwise, execution returns to the top of the loop.
+If the iteration variable is not stated, \ib{NEXT} applies to the most recent
+loop.
+When the \ib{STEP} is non-negative, `exceeds' means `is greater than'.
+When the \ib{STEP} is negative, `exceeds' means `is less than'.
+Terminating a loop also terminates any nested loop.
+See \ib{FOR} and \ib{GOSUB}.\\
+\iib{FOR I = 8 TO 3 STEP -2:~NEXT}\\
+\iib{FOR J = -5 TO -2:~FOR K = 1 TO 3:~NEXT K,J}\\
+\iib{REM at this point, I = 1, J = -1, K = 4}
+}\yspace
+
+\bit{ON\ldots{}GOSUB}{
+Branches to the $n$th of a list of subroutines.
+If $n$ should be zero, or exceed the number of subroutines, no branch is made,
+and execution continues with the next statement.\\
+\iib{N = 2:~ON N GOSUB 1000, 2000, 3000}\\
+\iib{REM branches to the subroutine at line 2000}
+}\yspace
+
+\bit{ON\ldots{}GOTO}{
+Branches to the $n$th of a list of destinations.
+If $n$ should be zero, or exceed the number of destinations, no branch is made,
+and execution continues with the next statement.\\
+\iib{ON INT(3*RND(1)+1) GOTO 500, 600, 700}\\
+\iib{REM goes to one of these three lines}
+}\yspace
+
+\bit{PRINT}{
+Sends visible output to the terminal.
+Numbers are printed with a trailing space.
+Positive numbers also have a leading space (in lieu of a negative number's
+sign).
+(Use \ib{STR\$(X)} to suppress these.)
+The width of the terminal is divided into `print zones' of 14 spaces each.
+Consider;\yspace\\
+\iib{PRINT A;BTAB(16)CHR\$(34)SPC(4)":",C D\$;}\yspace\\
+The first semicolon separates \ib{A} from \ib{B}, so we don't get the value of
+\ib{AB}.
+No semicolon is needed after \ib{B}, since the reserved word `\ib{TAB}' cannot
+be part of a variable's name.
+\ib{TAB(16)} moves the cursor to terminal-column 16, where \ib{CHR\$(34)} prints
+a double-quote.
+\ib{SPC(4)} moves the cursor four more spaces to the right, where a colon is
+printed.
+The comma then moves the cursor to the beginning of the next print zone, where
+the value of \ib{CD\$} is printed.
+(Whitespace is ignored, including within keywords.)
+The final semicolon says \emph{not} to print a newline at the end.\yspace\\
+\ib{TAB}, \ib{SPC} and comma are rapid operations, in that they take essentially
+no time even when teletypewriter-effect options are active.
+They do not overprint existing text.
+This is in contrast to printing spaces, which does take time, and does
+overprint.
+Cursor positioning and text-wrapping will be inaccurate when special characters,
+such as a bell or tab, have been printed to the line.
+}\yspace
+
+\bit{READ}{
+Assigns the next \ib{DATA} value to a variable. See \ib{RESTORE}.\\
+\iib{READ X,Y\$ ~:REM read a number and a string}
+}\yspace
+
+\bit{REM}{A remark; the rest of the line is a comment.}
+\bit{RESTORE}{Allows \ib{DATA} to be \ib{READ} again.\\
+\iib{RESTORE ~~~~~:REM re-READ from the beginning}\\
+\iib{RESTORE 600 ~:REM re-READ data from line 600}
+}\yspace
+
+\bit{RETURN}{
+Returns from a subroutine (to the point of \ib{GOSUB}).
+}\yspace
+
+\bit{STOP}{
+Terminates execution with a break message.
+}
+
+\newpage
+\section{Functions}
+
+\bit{ABS(X)}{Absolute value of \ib{X}.}
+\bit{ASC(X\$)}{ASCII code of the first character of \ib{X\$}.}
+\bit{ATN(X)}{Arctangent of \ib{X}.}
+\bit{CHR\$(X)}{The character with ASCII value \ib{X}.}
+\bit{COS(X)}{Cosine of \ib{X}.}
+\bit{EXP(X)}{Natural exponential function of \ib{X}.}
+\bit{INT(X)}{Greatest integer less than or equal to \ib{X} (floor function).}
+\bit{LEFT\$(X\$,N)}{The leftmost \ib{N} characters of \ib{X\$}.}
+\bit{LEN(X\$)}{The length, in characters, of \ib{X\$}.}
+\bit{LOG(X)}{Natural logarithm of \ib{X}.}
+\bit{MID\$(X\$,I,N)}{An \ib{N}-character substring of \ib{X\$}, starting from
+the \ib{I}th (or all characters from the \ib{I}th onward, if \ib{N} is
+omitted).}
+\bit{INSTR(N,X\$,Y\$)}{The position of the first occurrence of string \ib{Y\$}
+within string \ib{X\$}, not coming before the \ib{N}th character (or the first,
+if \ib{N} is omitted).
+Returns \ib{0} when \ib{X\$} is empty, or when \ib{Y\$} does not appear.
+}
+\bit{POS(1)}{Current position of the cursor across the console (the leftmost
+column is numbered zero).}
+\bit{RND(X)}{A variate from the standard uniform distribution.
+Use \ib{X = 1} for a new variate, or \ib{X = 0} for the previous one.
+}
+\bit{RIGHT\$(X\$,N)}{The rightmost \ib{N} characters of \ib{X\$}.}
+\bit{SGN(X)}{Sign (signum) function of \ib{X}.}
+\bit{SIN(X)}{Sine of \ib{X}.}
+\bit{SPC(X)}{Advances the cursor \ib{X} spaces to the right (or left, if \ib{X}
+is negative).
+Can only be used within \ib{PRINT} statements.}
+\bit{SQR(X)}{Square root of \ib{X}.}
+\bit{STR\$(X)}{Converts \ib{X} to character (string) representation.}
+\bit{STRING\$(N,X\$)}{Concatenates \ib{N} copies of \ib{X\$} (or \ib{N} spaces,
+should \ib{X\$} be omitted).}
+\bit{SYST(1)}{Current system date-time, in seconds.}
+\bit{TAB(X)}{Positions the cursor at column \ib{X} (or \ib{-X} spaces in from
+the right margin, if \ib{X} is negative). Can only be used within \ib{PRINT}
+statements.}
+\bit{TAN(X)}{Tangent of \ib{X}.}
+\bit{TTW(1)}{Width of the terminal, in characters.}
+\bit{VAL(X\$)}{Converts \ib{X\$} to its numerical value.}\yspace\\
+
+The dummy argument to \ib{POS}, \ib{SYST}, and \ib{TTW} must have the value
+\ib{1}.
+\ib{POS} and \ib{TAB} will be inaccurate when special characters
+(\textbackslash{}a, \textbackslash{}b, \textbackslash{}t, etc.) have been
+printed since the last carriage return.
+
+{\ }\\
+\section{Identities}
+
+Functions on the left are not implemented directly.\\
+Substitute expressions from the right.
+\yspace
+
+\mat{A MOD B}{A-INT(A/B)*B}
+\mat{LOG10(X)}{LOG(X)/LOG(10)}
+\mat{SEC(X)}{1/COS(X)}
+\mat{CSC(X)}{1/SIN(X)}
+\mat{COT(X)}{1/TAN(X)}
+\mat{ARCSIN(X)}{ATN(X/SQR(1-X*X))}
+\mat{ARCCOS(X)}{1.5708-ATN(X/SQR(1-X*X)}
+\mat{ARCSEC(X)}{1.5708*SGN((X)-1)+ATN(SQR(X*X-1))}
+\mat{ARCCSC(X)}{1.5708*(SGN(X)-1)+ATN(1/SQR(X*X-1))}
+\mat{ARCCOT(X)}{1.5708-ATN(X)}
+\mat{SINH(X)}{(EXP(X)-EXP(-X))/2}
+\mat{COSH(X)}{(EXP(X)+EXP(-X))/2}
+\mat{TANH(X)}{1-2*EXP(-X)/(EXP(X)+EXP(-X))}
+\mat{SECH(X)}{2/(EXP(X)+EXP(-X))}
+\mat{CSCH(X)}{2/(EXP(X)-EXP(-X))}
+\mat{COTH(X)}{1+2*EXP(-X)/(EXP(X)-EXP(-X))}
+\mat{ARSINH(X)}{LOG(X+SQR(X*X+1))}
+\mat{ARCOSH(X)}{LOG(X+SQR(X*X-1))}
+\mat{ARTANH(X)}{LOG((1+X)/(1-X))/2}
+\mat{ARSECH(X)}{LOG((SQR(1-X*X)+1)/X)}
+\mat{ARCSCH(X)}{LOG((SQR(1+X*X)*SGN(X)+1)/X)}
+\mat{ARCOTH(X)}{LOG((X+1)/(X-1))/2}
+
+\end{document}
+
+% MJL @ Titirangi, 24 July 2022.
+% EOF
