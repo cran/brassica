@@ -1,5 +1,6 @@
 # Evaluation of BASIC expressions (not containing a command keyword).
 # MJL @ Titirangi, 3 August 2022.
+# Last edit: 12 September 2022.
 
 ################################################################################
 # BASIC functions.
@@ -15,6 +16,8 @@ functions <- c("ABS", "ASC", "ATN", "CHR$", "COS", "EXP", "INSTR", "INT",
 exponentiators  <- list("^" = "EvalRAISE")
 arithUnaries    <- list("-" = "EvalNEGATE", "+" = "EvalIDENTITY")
 multipliers     <- list("*" = "EvalMULTIPLY", "/" = "EvalDIVIDE")
+integerDividers <- list("\\" = "EvalINTEGERDIVISION")
+modulos         <- list("MOD" = "EvalMODULO")
 adders          <- list("+" = "EvalADD", "-" = "EvalSUBTRACT")
 relationals     <- list("=" = "EvalEQUAL", "<>" = "EvalNOTEQUAL",
                         "<" = "EvalLESS", ">=" = "EvalNOTLESS",
@@ -23,12 +26,21 @@ logicalUnaries  <- list("NOT" = "EvalNOT")
 logicalBinaries <- list("AND" = "EvalAND", "OR" = "EvalOR", "XOR" = "EvalXOR")
 
 ################################################################################
-# Derived vectors of operator groups (names only).
+# Derived vectors of operator groups (names or symbols only).
 
-arithmeticals   <- c(names(exponentiators), names(multipliers), names(adders))
-operators       <- c(arithmeticals, names(relationals))
-logicals        <- c(names(logicalUnaries), names(logicalBinaries))
-binaries        <- c(operators, names(logicalBinaries))
+# All logical operators: NOT, AND, OR, XOR.
+logicals <- c(names(logicalUnaries),
+              names(logicalBinaries))
+
+# All symbolic operators: ^, -, *, \, <>, etc.
+operators <- c(names(exponentiators), names(multipliers),
+               names(integerDividers), names(adders), names(relationals))
+
+# All alphabetic operators: MOD, NOT, AND, OR, XOR.
+operatorWords <- c(names(modulos), logicals)
+
+# All binary operators: ^, MOD, +, =, <=, AND, etc.
+binaries <- c(operators, names(modulos), names(logicalBinaries))
 
 ################################################################################
 # BASIC digits (includes .), for detecting numeric literals.
@@ -117,9 +129,9 @@ EvalGroup <- function(s)
 EvalName <- function(s)
 {
   # Evaluates the alphanumerically named object at the beginning of statement s.
-  # This might be a variable, a function, or a logical operator.
+  # This might be a variable, a function, or an operator word.
   if (BeginsWith("FN", s)) return(EvalUserFunction(s))
-  if (BeginsWithAny(logicals, s)) return(IsolateLogical(s))
+  if (BeginsWithAny(operatorWords, s)) return(IsolateOperatorWord(s))
   if (BeginsWithAny(functions, s)) return(EvalFunction(s))
   v <- DetachLeadingVariable(s)
   Intermediate(GetValue(v[[variable]]), v[[remainder]])
@@ -306,19 +318,19 @@ IsFunction <- function(s)
   (length(s) == 1L) && any(functions == toupper(s), na.rm = TRUE)
 }
 
-IsolateLogical <- function(s)
-{
-  # Detaches a logical operator from the beginning of statement s. The operator
-  # is not applied at this time.
-  o <- BeginsWithWhich(logicals, s)
-  Intermediate(AsOperator(o), substring(s, nchar(o) + 1L))
-}
-
 IsolateOperator <- function(s)
 {
   # Detaches an arithmetical or relational operator from the beginning of
   # statement s. The operator is not applied at this time.
   o <- BeginsWithWhich(operators, s)
+  Intermediate(AsOperator(o), substring(s, nchar(o) + 1L))
+}
+
+IsolateOperatorWord <- function(s)
+{
+  # Detaches an operator word from the beginning of statement s.
+  # The operator is not applied at this time.
+  o <- BeginsWithWhich(operatorWords, s)
   Intermediate(AsOperator(o), substring(s, nchar(o) + 1L))
 }
 
@@ -447,6 +459,8 @@ ApplyBinaryOperators <- function(a)
   # There can be no groupings or unary operators within the list.
   a <- ApplyExponentiators(a); if (IsEvaluated(a)) return(a)
   a <- ApplyMultipliers(a); if (IsEvaluated(a)) return(a)
+  a <- ApplyIntegerDividers(a); if (IsEvaluated(a)) return(a)
+  a <- ApplyModulos(a); if (IsEvaluated(a)) return(a)
   a <- ApplyAdders(a); if (IsEvaluated(a)) return(a)
   a <- ApplyRelationals(a); if (IsEvaluated(a)) return(a)
   ApplyLogicals(a)
@@ -477,6 +491,13 @@ ApplyExponentiators <- function(a)
   ApplyCollection(exponentiators, a)
 }
 
+ApplyIntegerDividers <- function(a)
+{
+  # Applies any integer-division operators appearing within the list of BASIC
+  # statement components, a, in left-to-right order.
+  ApplyCollection(integerDividers, a)
+}
+
 ApplyLogicals <- function(a)
 {
   # Applies any binary logical operators appearing within the list of BASIC
@@ -484,6 +505,13 @@ ApplyLogicals <- function(a)
   o <- logicalBinaries
   for (i in seq_along(o)) a <- ApplyCollection(o[i], a)
   a
+}
+
+ApplyModulos <- function(a)
+{
+  # Applies any modulo operators appearing within the list of BASIC statement
+  # components, a, in left-to-right order.
+  ApplyCollection(modulos, a)
 }
 
 ApplyMultipliers <- function(a)
@@ -631,10 +659,12 @@ EvalRND <- function(x)
 {
   # Returns a pseudo-random variate from the uniform distribution over (0, 1).
   # When x is zero, the previous value is returned (rather than a new one).
+  # When x is negative, the generator is seeded with as.integer(floor(x)).
   if (!ArgsMatch(basicN, x)) return(Exit())
-  if (Value(x) == 1) return(AsNumber(GetNewRandomNumber()))
-  if (Value(x) == 0) return(AsNumber(GetLastRandomNumber()))
-  SetIllegalQuantityError()
+  v <- Value(x)
+  if (v > 0) return(AsNumber(GetNewRandomNumber()))
+  if (v == 0) return(AsNumber(GetLastRandomNumber()))
+  AsNumber(SeedRandomNumbers(as.integer(floor(v))))
 }
 
 EvalRIGHT_ <- function(x)
@@ -784,6 +814,36 @@ EvalIDENTITY <- function(x)
   # are not allowed; the operator must still act on a valid data value.
   if (IsUnevaluated(x)) return(SetSyntaxError())
   x
+}
+
+EvalINTEGERDIVISION <- function(x, y)
+{
+  # Applies the integer-division operator between two BASIC numbers, x (the
+  # dividend) and y (the divisor). As in original (extended) Altair BASIC, both
+  # operands are truncated to integers before the operation, and the result is
+  # rounded toward zero.
+  if (IsUnevaluated(x) || IsUnevaluated(y)) return(SetSyntaxError())
+  if (!IsNumber(x) || !IsNumber(y)) return(SetTypeMismatchError())
+  a <- floor(Value(x))
+  b <- floor(Value(y))
+  if (b == 0) return(SetDivisionByZeroError())
+  v <- a / b
+  AsNumber(sign(v) * floor(abs(v)))
+}
+
+EvalMODULO <- function(x, y)
+{
+  # Applies the modulo operator between two BASIC numbers, x (the dividend) and
+  # y (the modulus). As in original (extended) Altair BASIC, the operation is
+  # defined as A MOD B = A - B * (A\B), with both operands being truncated to
+  # integers beforehand.
+  if (IsUnevaluated(x) || IsUnevaluated(y)) return(SetSyntaxError())
+  if (!IsNumber(x) || !IsNumber(y)) return(SetTypeMismatchError())
+  a <- floor(Value(x))
+  b <- floor(Value(y))
+  if (b == 0) return(SetDivisionByZeroError())
+  v <- a / b
+  AsNumber(a - b * sign(v) * floor(abs(v)))
 }
 
 EvalMULTIPLY <- function(x, y)

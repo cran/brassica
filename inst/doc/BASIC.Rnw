@@ -7,12 +7,15 @@
 %\VignettePackage{brassica}
 
 \setlength{\parindent}{0em}
-\addtolength{\topmargin}{-1em}
-\addtolength{\textheight}{1em}
+%\addtolength{\topmargin}{-1em}
+%\addtolength{\textheight}{1em}
 
 \newcommand{\yspace}{\vspace{1.5ex}}
-\newcommand{\ib}[1]{\texttt{#1}}
-\newcommand{\iib}[1]{\hspace*{1em}\texttt{#1}}
+\newcommand{\ib}[1]{\mbox{\texttt{#1}}}
+\newcommand{\iib}[1]{\hspace*{1em}\mbox{\texttt{#1}}}
+
+% A backslash character, but only when in typewriter font.
+\newcommand{\bs}{\symbol{92}}
 
 \usepackage{alltt}
 
@@ -87,7 +90,9 @@ In decreasing order of precedence:
 \bit{\string^}{Exponentiation.}
 \bit{\textnormal{unary} + -}{Identity and negation.}
 \bit{* /}{Multiplication and division.}
-\bit{+ -}{Addition and subtraction.}
+\bit{\bs}{Integer division.}
+\bit{MOD}{Modulo.}
+\bit{+ -}{Addition and subtraction (and string concatenation).}
 \bit{= <> < <= > >=}{
 Equal to, not equal to, less than, less than or equal to, greater than, greater
 than or equal to.
@@ -103,21 +108,41 @@ Operators of equal precedence, such as the six relationals, are applied in
 left-to-right order.
 The equivalence operator is a single \ib{=}, which is also used for the
 assignment operator immediately after an expressed or implied \ib{LET}.
-Logically false relations evaluate to \ib{0}, true relations to \ib{-1}.
-Whitespace is ignored; be wary of \ib{F OR} and \ib{X OR}.
+Whitespace is ignored; be wary of \ib{F OR}, \ib{X OR}, and \ib{T AND}.
 Consecutive operators need not be separated by parentheses, but see below.
 
-\vspace{3ex}
+\vspace{4ex}
+Logically false relations evaluate to \ib{0}, true relations to \ib{-1}.
+There is no short-circuiting.
 Relational operations are allowed between strings, and are case-insensitive
 (hence, \ib{"a" = "A"}).
 Addition of strings performs concatenation.
-Arguments of logical operators are coerced to integers.
+
+\vspace{4ex}
+Operands of bitwise operators are truncated to integers before the operator is
+applied.
 \ib{NOT(X\%) = -(X\% + 1)}.
 
-\vspace{3ex}
-The unary negation and logical NOT operators imply a bracketing extending to
-(not around) the next operator of lower precedence.
-The unary identity operator, \ib{+}, acts only on the value to its immediate right.
+\vspace{4ex}
+Operands of \ib{\bs} and \ib{MOD} are truncated to integers before the operator
+is applied.
+Results from \ib{\bs} are then rounded to the nearest integer towards zero.
+Hence, \ib{-2\bs{}3 = 0 = 2\bs{}3}, as opposed to \ib{INT(-2/3) = -1}.
+The modulo operator is subsequently defined via
+\begin{example}
+A MOD B\quad=\quad{}INT(A) - INT(B) * (A\bs{}B)
+\end{example}
+If an alternative definition is required, perhaps a generalisation to
+floating-point values, use something like:
+\begin{example}
+\ib{DEF FNMO(A,B)\quad=\quad{}A - B * INT(A/B)}
+\end{example}
+
+\vspace{4ex}
+The unary negation (\ib{-}) and logical NOT (\ib{NOT}) operators imply a
+bracketing extending to (not around) the next operator of lower precedence.
+The unary identity operator (\ib{+}) acts only on the value to its immediate
+right.
 In effect, the unaries act as functions.
 Hence;
 
@@ -134,6 +159,7 @@ A * NOT B + NOT C + NOT D + E AND F
 \phantom{=}=\quad{}A * NOT(B + NOT(C + NOT(D + E))) AND F
 \phantom{=}=\quad{}A * ((NOT B) - (NOT C) + (NOT D) - E) AND F
 \end{example}
+(This is the behaviour of Commodore 64 BASIC v2.)
 
 \newpage
 \section{Commands}
@@ -241,6 +267,20 @@ Non-zero numbers and non-empty strings are considered true.\\
 \iib{20 IF A\$ THEN X=X+1:~GOSUB 500:~GOTO 40}\\
 \iib{30 X=0:~B\$="Z"}\\
 \iib{40 REM line 30 is the ELSE block}
+}\yspace
+
+\bit{IF\ldots{}THEN\ldots{}ELSE}{
+Conditional execution.
+If the condition is true, the statement before \ib{ELSE} is executed.
+If the condition is false, the statement after \ib{ELSE} is executed.
+In either case, execution proceeds to any further statements on the line.
+When statements are nested, \ib{THEN}s and \ib{ELSE}s are paired in the same
+manner as opening and closing parentheses.\\
+\iib{IF X THEN PRINT "T" ELSE PRINT "F":~A = 1}\\
+\iib{REM A is assigned in either case}\yspace\\
+\iib{IF X THEN IF Y THEN 700 ELSE 800:~B = 2}\\
+\iib{REM the ELSE is paired with the second THEN}\\
+\iib{REM the B statement is unreachable}
 }\yspace
 
 \bit{INPUT}{
@@ -374,8 +414,11 @@ Returns \ib{0} when \ib{X\$} is empty, or when \ib{Y\$} does not appear.
 \bit{POS(1)}{Current position of the cursor across the console (the leftmost
 column is numbered zero).}
 \bit{RND(X)}{A variate from the standard uniform distribution.
-Use \ib{X = 1} for a new variate, or \ib{X = 0} for the previous one.
-}
+Use \ib{X > 0} for a new variate (\ib{X = 1} is the conventional choice),
+or \ib{X = 0} for the previous one.
+Use \ib{X < 0} to seed the generator with \ib{INT(X)}.
+Note that \ib{RND(-1)} on its own is a syntax error; use \ib{A = RND(-1)},
+or similar.}
 \bit{RIGHT\$(X\$,N)}{The rightmost \ib{N} characters of \ib{X\$}.}
 \bit{SGN(X)}{Sign (signum) function of \ib{X}.}
 \bit{SIN(X)}{Sine of \ib{X}.}
@@ -400,14 +443,13 @@ The dummy argument to \ib{POS}, \ib{SYST}, and \ib{TTW} must have the value
 (\textbackslash{}a, \textbackslash{}b, \textbackslash{}t, etc.) have been
 printed since the last carriage return.
 
-{\ }\\
+\newpage
 \section{Identities}
 
 Functions on the left are not implemented directly.\\
 Substitute expressions from the right.
 \yspace
 
-\mat{A MOD B}{A-INT(A/B)*B}
 \mat{LOG10(X)}{LOG(X)/LOG(10)}
 \mat{SEC(X)}{1/COS(X)}
 \mat{CSC(X)}{1/SIN(X)}
@@ -429,8 +471,10 @@ Substitute expressions from the right.
 \mat{ARSECH(X)}{LOG((SQR(1-X*X)+1)/X)}
 \mat{ARCSCH(X)}{LOG((SQR(1+X*X)*SGN(X)+1)/X)}
 \mat{ARCOTH(X)}{LOG((X+1)/(X-1))/2}
+\mat{PI}{3.1416}
 
 \end{document}
 
 % MJL @ Titirangi, 24 July 2022.
+% Last edit: 12 September 2022.
 % EOF

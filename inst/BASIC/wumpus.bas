@@ -1,6 +1,6 @@
 # WUMPUS
 # By Gregory Yob.
-# From David H. Ahl & Steve North, More Basic Computer Games, Workman, 1980.
+# From David H. Ahl & Steve North, More BASIC Computer Games, Workman, 1980.
 
 # Changes:
 # - Formatting of some printed output.

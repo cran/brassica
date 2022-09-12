@@ -1,6 +1,6 @@
 # LIFE
 # By Clark Baker.
-# From David H. Ahl & Steve North, Basic Computer Games, Workman, 1978.
+# From David H. Ahl & Steve North, BASIC Computer Games, Workman, 1978.
 
 # Changes:
 # - Formatting of some printed output.
@@ -8,7 +8,8 @@
 # - Changed line 40 to begin on a blank, instead of on 'done'.
 # - Removed line 50, and changed the live cell condition on line 160 from
 #   '<>" "' to '="@"' (from 'not a space', to 'is an at sign').
-# - Added 'DELAY 0' to line 640 (this flushes the terminal).
+# - Added 'DELAY 0' to line 635 (this flushes the terminal).
+# - Inserted lines 639 and 639, asking whether or not to continue.
 
 2 PRINT TAB(25);"LIFE"
 4 PRINT TAB(18);"Creative Computing"
@@ -73,8 +74,10 @@
 610 IF C=3 THEN A(X,Y)=3: P=P+1
 620 NEXT Y
 630 NEXT X
-635 X1=X1-1: Y1=Y1-1: X2=X2+1: Y2=Y2+1
-640 DELAY 0: GOTO 210
+635 X1=X1-1: Y1=Y1-1: X2=X2+1: Y2=Y2+1: DELAY 0
+638 IF G=21 THEN INPUT "Continue to generation 50 (Y/n)";C$: IF C$="N" THEN END
+639 IF G=51 THEN INPUT "Continue indefinitely (y/N)";C$: IF C$<>"Y" THEN END
+640 GOTO 210
 650 END
 700 REM AUTHORS & INSTRUCTIONS
 710 PRINT
@@ -89,7 +92,7 @@
 800 PRINT "? @@."
 810 PRINT "? .@."
 820 PRINT "?"
-830 PRINT "The game runs indefinitely, until you escape."
+830 PRINT "Escape to end the game after generation 50."
 840 PRINT
 850 PRINT "Enter your pattern:"
 860 RETURN

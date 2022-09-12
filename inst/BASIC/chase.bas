@@ -1,6 +1,6 @@
 # CHASE
 # By Mac Oglesby, modified by Bill Cotter, improved by Arnold Loveridge.
-# From David H. Ahl & Steve North, More Basic Computer Games, Workman, 1980.
+# From David H. Ahl & Steve North, More BASIC Computer Games, Workman, 1980.
 
 # Changes:
 # - Formatting of some printed output, especially map characters.

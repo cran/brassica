@@ -1,6 +1,6 @@
 # MAZE
 # By Richard Schaal.
-# From David H. Ahl & Steve North, More Basic Computer Games, Workman, 1980.
+# From David H. Ahl & Steve North, More BASIC Computer Games, Workman, 1980.
 
 # Changes
 # - Appended author and year to title.

@@ -1,12 +1,14 @@
 # Implements the action of BASIC commands (beginning with a keyword).
 # MJL @ Titirangi, 3 August 2022.
+# Last edit: 13 September 2022.
 
 ################################################################################
 # Recognised BASIC keywords (commands).
 
-keywords <- c("CLEAR", "DATA", "DEF", "DELAY", "DIM", "END", "FN", "FOR", "GO",
-              "GOSUB", "GOTO", "IF", "INPUT", "LET", "NEXT", "ON", "PRINT",
-              "READ", "REM", "RESTORE", "RETURN", "STEP", "STOP", "THEN", "TO")
+keywords <- c("CLEAR", "DATA", "DEF", "DELAY", "DIM", "ELSE", "END", "FN",
+              "FOR", "GO", "GOSUB", "GOTO", "IF", "INPUT", "LET", "NEXT", "ON",
+              "PRINT", "READ", "REM", "RESTORE", "RETURN", "STEP", "STOP",
+              "THEN", "TO")
 
 ################################################################################
 # Named components of composite data structures.
@@ -158,6 +160,13 @@ EnactDIM <- function(s)
   AdvanceToNextStatement()
 }
 
+EnactELSE <- function(s)
+{
+  # It is an error for a statement to begin with ELSE, which should appear only
+  # after IF and THEN, as part of an IF - THEN - ELSE statement.
+  SetSyntaxError()
+}
+
 EnactEND <- function(s)
 {
   # Actions END commands. These set a blank exit message to halt program
@@ -240,18 +249,21 @@ EnactGOTO <- function(s)
 
 EnactIF <- function(s)
 {
-  # Actions IF - THEN and IF - GOTO statements. The statement will only be
-  # marked as checked after the condition has evaluated TRUE and the subsequent
-  # THEN (or GOTO) sub-statement has been successfully executed.
+  # Actions IF - GOTO, IF - THEN, and IF - THEN - ELSE statements. The statement
+  # will only be marked as checked after a THEN, ELSE, or GOTO sub-statement has
+  # been successfully executed. This admits the possibility that an alternative
+  # (THEN or ELSE) sub-statement might still contain an error.
   i <- PositionOfFirst("THEN", s)
   g <- PositionOfFirst("GOTO", s)
   if ((g > 0L) && ((i < 0L) || (g < i))) i <- g
   if (i < 1L) return(SetSyntaxError())
   k <- IsFalse(Eval(substring(s, 0L, i - 1L)))
   if (Terminated()) return(Exit())
-  if (k) return(AdvanceToStartOfNextLine())
   s <- substring(s, i + 4L)
-  if (i == g) return(EnactGOTO(s))
+  if (i == g) return(if (k) AdvanceToStartOfNextLine() else EnactGOTO(s))
+  j <- PositionOfPairedELSE(s)
+  if (k && (j < 0L)) return(AdvanceToStartOfNextLine())
+  if (j > 0L) s <- if (k) substring(s, j + 4L) else substring(s, 0L, j - 1L)
   if (grepl("^[[:digit:]]+$", s)) return(EnactImpliedGOTO(s))
   Enact(s)
 }
@@ -571,6 +583,22 @@ PositionOfFirstReservedWord <- function(s)
   w <- !is.na(match(substring(toupper(s), u, v), r))
   if (any(w)) return(u[which(w)[1L]])
   n + 1L
+}
+
+PositionOfPairedELSE <- function(s)
+{
+  # String s immediately follows a THEN (not included in s). This function
+  # returns the position, within s, of the ELSE paired with that leading THEN.
+  # Returns -1 when no such ELSE exists.
+  u <- toupper(s)
+  k <- PositionsOf("\"", u)
+  i <- Unenclosed("ELSE", u, k)
+  if (length(i) == 0L) return(-1L)
+  j <- Unenclosed("THEN", u, k)
+  if (length(j) == 0L) return(i[1L])
+  i <- i[(sapply(i, function(a, b) sum(a > b), j) - seq_along(i)) < 0L]
+  if (length(i) == 0L) return(-1L)
+  i[1L]
 }
 
 Uncontained <- function(w, s, z)

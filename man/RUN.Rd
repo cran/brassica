@@ -43,10 +43,12 @@ Returns an invisible \code{NULL}, after printing to standard output.
 }
 \details{
 List of bundled example programs (from the references):
-\tabular{llr}{\emph{Camel} \tab by the Heath Users Group \tab (random walk)
+\tabular{llr}{\emph{Animal} \tab by Arthur Luehrmann \tab (decision trees)
+\cr\emph{Camel} \tab by the Heath Users Group \tab (random walk)
 \cr\emph{Chase} \tab by Mac Oglesby \tab (robots)
 \cr\emph{Eliza} \tab by Jeff Shrager \tab (language processing)
 \cr\emph{Flip} \tab by John S.{} James \tab (machine learning)
+\cr\emph{Hammurabi} \tab by David H.{} Ahl \tab (resource management)
 \cr\emph{Inkblot} \tab by Scott Costello \tab (projection)
 \cr\emph{Life} \tab by Clark Baker \tab (cellular automaton)
 \cr\emph{Maze} \tab by Richard Schaal \tab (depth-first search)

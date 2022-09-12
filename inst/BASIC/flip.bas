@@ -1,6 +1,6 @@
 # FLIP
 # By John S. James.
-# From David H. Ahl & Steve North, More Basic Computer Games, Workman, 1980.
+# From David H. Ahl & Steve North, More BASIC Computer Games, Workman, 1980.
 
 # Builds a 16-parameter profile of the player from their last two guesses and
 # whether they were right or wrong. The program then exploits any statistical

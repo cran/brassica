@@ -1,5 +1,6 @@
 # BASIC program storage, state, and flow.
 # MJL @ Titirangi, 3 August 2022.
+# Last edit: 12 September 2022.
 
 ################################################################################
 # Storage space for one BASIC program and its run-state.
@@ -98,7 +99,10 @@ LoadData <- function()
   # does not detect DATA not at the very beginning of its statement (as is the
   # case for, say, 'IF 1=1 THEN DATA 1,2,3'). Note that 'DATA ,,' and 'DATA'
   # (with nothing after it) are both allowed. This is read as an empty string
-  # (which becomes a zero if coerced to number-type).
+  # (which becomes a zero if coerced to number-type). DATA and REM statements
+  # are marked as checked here, at load time (statements of either type are
+  # ignored at run time, and it is not uncommon for them to be inaccessible).
+  k <- GetChecks()
   s <- GetStatements()
   n <- GetLineNumbers()
   n[is.na(n)] <- -1L
@@ -106,13 +110,16 @@ LoadData <- function()
   d <- character()
   for (i in seq_along(s))
   {
-    for (b in s[[i]][BeginsWith("DATA", s[[i]])])
+    k[[i]] <- BeginsWith("DATA", s[[i]])
+    for (b in s[[i]][k[[i]]])
     {
       a <- ScanData(Trim(b, "DATA"))
       names(a)[1L] <- as.character(n[i])
       d <- c(d, a)
     }
+    k[[i]] <- k[[i]] | BeginsWith("REM", s[[i]])
   }
+  SetChecks(k)
   SetData(d)
 }
 
@@ -313,7 +320,7 @@ SpaceFreeLine <- function(s)
 SetReservedWords <- function()
 {
   # Builds a constant look-up table of BASIC's reserved words, at load-time.
-  w <- c(keywords, functions, logicals)
+  w <- c(keywords, functions, operatorWords)
   w <- w[order(nchar(w), w)]
   i <- grepl("[$]$", w)
   u <- w[!i]
@@ -1208,6 +1215,14 @@ GetNewRandomNumber <- function()
   # Generates and returns a new pseudorandom number from the standard uniform
   # distribution. Updates lastRandomNumber in case the value is wanted again.
   SetPro(lastRandomNumber, runif(1L))
+}
+
+SeedRandomNumbers <- function(n)
+{
+  # Seeds the pseudorandom number generator from integer n.
+  # Returns a new random number, thereby updating lastRandomNumber.
+  set.seed(n)
+  GetNewRandomNumber()
 }
 
 ################################################################################

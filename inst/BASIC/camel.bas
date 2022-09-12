@@ -1,6 +1,6 @@
 # CAMEL
 # By (at least, from) the Heath Users Group.
-# From David H. Ahl & Steve North, More Basic Computer Games, Workman, 1980.
+# From David H. Ahl & Steve North, More BASIC Computer Games, Workman, 1980.
 
 # Changes:
 # - Formatting of some printed output.
@@ -24,7 +24,7 @@
 20 PRINT TAB(20);"Creative Computing"
 30 PRINT TAB(18);"Morristown, New Jersey"
 40 PRINT
-50 PRINT TAB(12);"Submitted by the Heath Users Group"
+50 PRINT TAB(12);"submitted by the Heath Users Group"
 60 PRINT TAB(26);"c1978"
 90 PRINT:PRINT:PRINT
 110 PRINT "Would you like instructions";

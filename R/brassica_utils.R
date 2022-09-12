@@ -1,5 +1,6 @@
 # BASIC programmer's development tools.
 # MJL @ Titirangi, 11 August 2022.
+# Last edit: 11 September 2022.
 
 ################################################################################
 # Program listing / checking.
@@ -10,7 +11,7 @@ LIST <- function()
   ProgramListing()
 }
 
-NotRun <- function(pretty = FALSE)
+NotRun <- function(pretty = TRUE)
 {
   # Returns a data frame of unchecked (not wholly checked) lines, by file line
   # number and BASIC line number. If the pretty argument is TRUE, the frame is

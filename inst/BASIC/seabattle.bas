@@ -1,6 +1,6 @@
 # SEABAT
 # By Vincent Erickson.
-# From David H. Ahl & Steve North, More Basic Computer Games, Workman, 1980.
+# From David H. Ahl & Steve North, More BASIC Computer Games, Workman, 1980.
 
 # This program goes by 'Seabattle', 'Sea battle', 'Seabat', and 'Underwater Pie
 # Lob'. Vincent's name is variously given as either 'Erikson' or 'Erickson'.

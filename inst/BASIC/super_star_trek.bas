@@ -1,6 +1,6 @@
 # SUPER STAR TREK
 # By Bob Leedon & Dave Ahl.
-# From David H. Ahl & Steve North, Basic Computer Games, Workman, 1978.
+# From David H. Ahl & Steve North, BASIC Computer Games, Workman, 1978.
 
 # Changes:
 # - Formatting of some printed output.

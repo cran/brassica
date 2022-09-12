@@ -1,0 +1,11 @@
+Version 1.0.1 (2022-09-13)
+
+  * IF - THEN statements allow an optional ELSE clause.
+  * RND(X) returns a new variate for any X > 0 (no longer insists X = 1).
+  * RND(X) seeds the pseudorandom number generator with INT(X) when X < 0.
+  * MOD and \ operators implemented (from extended Altair BASIC, 1975).
+  * DATA and REM statements are checked at load time (for NotRun() purposes).
+  * NotRun() utility uses pretty = TRUE by default.
+  * Tweaked life.bas to prompt for continuation at generations 20 and 50.
+  * Added animal.bas and hammurabi.bas to the bundled listings.
+  * BASIC manual (vignette) and package manual both updated.
