@@ -2,6 +2,7 @@
 # By Vincent Erickson.
 # From David H. Ahl & Steve North, More BASIC Computer Games, Workman, 1980.
 
+# Command a submarine against sea monsters and an enemy fleet.
 # This program goes by 'Seabattle', 'Sea battle', 'Seabat', and 'Underwater Pie
 # Lob'. Vincent's name is variously given as either 'Erikson' or 'Erickson'.
 # Development took place on and off from 1977 through 1979.
@@ -24,8 +25,6 @@
 # - Added line 3535, to append current depth to the status report.
 # - Added line 4165 to fix bug when sabotaging too close to map edge.
 # - Added line 4085 to avoid a potential division-by-zero.
-# - Changed 'C1>F OR' to '(C1>F) OR' on line 4540. While MS BASIC doesn't allow
-#   whitespace in keywords (apart from GO TO), brassica does and reads 'FOR'.
 
 10 PRINT TAB(26);"SEABAT"
 12 PRINT TAB(20);"Creative Computing"
@@ -155,7 +154,7 @@
 1100 GOTO 880
 1110 D1=1-((.23+RND(1)/10)*(-(D<=50)))
 1120 GOSUB 6090
-1130 PRINT "Power available = ";STR$(P);". Power to use";
+1130 PRINT "Power available =";STR$(P);". Power to use";
 1140 INPUT P1
 1150 IF P1<0 OR P1>P THEN 1130
 1160 IF P1 <= 1000 THEN 1210
@@ -206,7 +205,7 @@
 1610 NEXT Y3
 1620 NEXT X3
 1630 NEXT X2
-1640 PRINT "Navigation complete. Power left = ";STR$(P);"."
+1640 PRINT "Navigation complete. Power left =";STR$(P);"."
 1650 IF P>0 THEN 1340
 1660 PRINT "Atomic pile has gone dead!!! Sub sinks, crew suffocates."
 1670 GOTO 6180
@@ -377,13 +376,13 @@
 3290 IF C>12 THEN 3320
 3300 PRINT "There are not enough crew to work the controls, ";N$;"."
 3310 GOTO 880
-3320 PRINT "Current depth = ";STR$(D);". New depth";
+3320 PRINT "Current depth =";STR$(D);". New depth";
 3330 INPUT D1
 3340 IF D1 >= 0 AND D1<3000 THEN 3370
 3350 PRINT "Hull crushed by pressure, ";N$;"!!"
 3360 GOTO 6180
 3370 P=P-INT(ABS((D-D1)/2+.5))
-3380 PRINT "Maneuver complete. Power loss = ";STR$(INT(ABS((D-D1)/2+.5)));"."
+3380 PRINT "Maneuver complete. Power loss =";STR$(INT(ABS((D-D1)/2+.5)));"."
 3390 D=D1
 3400 GOTO 4690
 3410 REM *** #5: STATUS / DAMAGE REPORT ***
@@ -500,19 +499,19 @@
 4490 ON O GOTO 4510,4580
 4500 GOTO 4470
 4510 REM *** FUEL TO POWER CONVERSION ***
-4520 PRINT "Fuel available = ";STR$(F);". Convert";
+4520 PRINT "Fuel available =";STR$(F);". Convert";
 4530 INPUT C1
-4540 IF (C1>F) OR C1<0 THEN 4520
+4540 IF C1>F OR C1<0 THEN 4520
 4550 F=F-C1
 4560 P=P+INT(C1/3)
 4570 GOTO 4640
 4580 REM *** POWER TO FUEL CONVERSION ***
-4590 PRINT "Power available = ";STR$(P-1);". Convert";
+4590 PRINT "Power available =";STR$(P-1);". Convert";
 4600 INPUT C1
 4610 IF C1>P-1 OR C1<0 THEN 4590
 4620 P=P-C1
 4630 F=F+INT(C1*3)
-4640 PRINT "Conversion complete. Power = ";STR$(P);". Fuel = ";STR$(F);"."
+4640 PRINT "Conversion complete. Power =";STR$(P);". Fuel =";STR$(F);"."
 4650 GOTO 4690
 4660 REM *** #9: SURRENDER ***
 4670 PRINT "Coward!! You're not very patriotic, ";N$;"!!!"
@@ -702,7 +701,7 @@
 8100 PRINT "  .. and hidden underwater mines."
 8110 PRINT ""
 8120 PRINT "The depth changes are effective to any depth, but they lose"
-8130 PRINT "their effectivness over distance, so the farther you are from"
+8130 PRINT "their effectiveness over distance, so the farther you are from"
 8140 PRINT "any ships, the better!"
 8150 PRINT "The sea monsters take a meandering course through your area that"
 8160 PRINT "may bring it close enough to attack you. You rarely survive."

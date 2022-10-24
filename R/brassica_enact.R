@@ -1,6 +1,6 @@
 # Implements the action of BASIC commands (beginning with a keyword).
 # MJL @ Titirangi, 3 August 2022.
-# Last edit: 13 September 2022.
+# Last edit: 28 September 2022.
 
 ################################################################################
 # Recognised BASIC keywords (commands).
@@ -546,7 +546,14 @@ EndOfLeadingName <- function(s)
   # word (command keyword, function, or logical operator).
   i <- attr(regexpr("^[[:alpha:]][[:alnum:]]*[%$]{0,1}", s), "match.length")
   j <- PositionOfFirstReservedWord(substring(s, 0L, i))
-  if (j <= i) j - 1L else i
+  if (j > i) return(i)
+  # Override the greedy algorithm in these cases; to read F OR, G OR, T OR, or
+  # T AND. Since EnactFOR() does not call this function, we still read FOR and
+  # TO R in the definition of a FOR loop (necessitating parentheses in the case
+  # of FOR I = (T) OR U TO V). GO R and TAN D would be syntax errors in any
+  # situation. Parentheses are still required for X OR (as in A < (BX) OR C).
+  if (BeginsWithAny(c("FOR", "GOR", "TOR", "TAND"), substring(s, j, j + 3L)))
+    j else j - 1L
 }
 
 PositionOfFirst <- function(w, s)
@@ -617,11 +624,15 @@ Uncontained <- function(w, s, z)
 DatumToNumber <- function(s)
 {
   # Converts R-string s (being user-input or a DATA item) to a BASIC number.
-  # BASIC regards blanks, and decimal points with no digit on either side, as
-  # representations of zero. Returns a non-fatal error on failure.
+  # Whereas BASIC expressions require numeric literals to contain at least a
+  # digit or decimal point (before the E, if any), INPUT and READ do not. Valid
+  # numeric data includes +, -, ., E, and blank. An absence of digits is treated
+  # as zero (on either side of any E or .). Multiple Es, decimal points after
+  # any E, and consecutive sign operators, are not allowed. Returns a non-fatal
+  # error on failure.
   w <- toupper(gsub("[[:blank:]]+", "", s))
-  if (!nzchar(w) || grepl("^[+-]{0,1}\\.(E[+-]{0,1}[[:digit:]]*){0,1}$", w))
-    return(AsNumber(0))
+  p <- "^[+-]{0,1}[.]{0,1}(E[+-]{0,1}[[:digit:]]*){0,1}$"
+  if (!nzchar(w) || grepl(p, w)) return(AsNumber(0))
   n <- try(suppressWarnings(as.numeric(w)), silent = TRUE)
   if (!inherits(n, "try-error") && is.finite(n)) return(AsNumber(n))
   AsError("Failed Numeric Conversion")

@@ -1,6 +1,6 @@
 # Evaluation of BASIC expressions (not containing a command keyword).
 # MJL @ Titirangi, 3 August 2022.
-# Last edit: 12 September 2022.
+# Last edit: 4 October 2022.
 
 ################################################################################
 # BASIC functions.
@@ -19,6 +19,7 @@ multipliers     <- list("*" = "EvalMULTIPLY", "/" = "EvalDIVIDE")
 integerDividers <- list("\\" = "EvalINTEGERDIVISION")
 modulos         <- list("MOD" = "EvalMODULO")
 adders          <- list("+" = "EvalADD", "-" = "EvalSUBTRACT")
+concatenators   <- list("+" = "EvalADD")
 relationals     <- list("=" = "EvalEQUAL", "<>" = "EvalNOTEQUAL",
                         "<" = "EvalLESS", ">=" = "EvalNOTLESS",
                         ">" = "EvalGREATER", "<=" = "EvalNOTGREATER")
@@ -35,6 +36,9 @@ logicals <- c(names(logicalUnaries),
 # All symbolic operators: ^, -, *, \, <>, etc.
 operators <- c(names(exponentiators), names(multipliers),
                names(integerDividers), names(adders), names(relationals))
+
+# All operators applicable to character strings: +, =, <, etc.
+stringOps <- c(names(concatenators), names(relationals))
 
 # All alphabetic operators: MOD, NOT, AND, OR, XOR.
 operatorWords <- c(names(modulos), logicals)
@@ -132,7 +136,9 @@ EvalName <- function(s)
   # This might be a variable, a function, or an operator word.
   if (BeginsWith("FN", s)) return(EvalUserFunction(s))
   if (BeginsWithAny(operatorWords, s)) return(IsolateOperatorWord(s))
-  if (BeginsWithAny(functions, s)) return(EvalFunction(s))
+  # TAND is excluded here, so as to be read as T AND, rather than TAN D.
+  if (BeginsWithAny(functions, s) && !BeginsWith("TAND", s))
+    return(EvalFunction(s))
   v <- DetachLeadingVariable(s)
   Intermediate(GetValue(v[[variable]]), v[[remainder]])
 }
@@ -651,7 +657,7 @@ EvalPOS <- function(x)
   # Returns the (virtual) cursor position from the left margin, starting from 0.
   # Not accurate when special characters are on the line (\a, \t, et cetera).
   if (!ArgsMatch(basicN, x)) return(Exit())
-  if (Value(x) != 1) return(SetIllegalQuantityError())
+  if (!any(Value(x) == c(0, 1))) return(SetIllegalQuantityError())
   AsNumber(VirtualCursorPosition())
 }
 
@@ -700,7 +706,7 @@ EvalSPC <- function(x)
   n <- as.integer(floor(Value(x)))
   if (n < 0L) {RetractPrintHead(-n); return(AsOperator(";"))}
   k <- VirtualCursorPosition()
-  w <- as.integer(options("width"))
+  w <- TerminalWidth()
   m <- (k + n) - w
   if (m > 0L) {PrintBufferAndNewline(); n <- m}
   while (n > w) {PrintNewLine(); n <- n - w}
@@ -719,9 +725,13 @@ EvalSQR <- function(x)
 EvalSTR_ <- function(x)
 {
   # Returns a character-string representation of BASIC number x.
+  # Non-negative values acquire a leading space.
   if (!ArgsMatch(basicN, x)) return(Exit())
-  s <- toupper(format(Value(x), digits = printPrecision))
-  AsString(sub("0.", ".", s, fixed = TRUE))
+  v <- Value(x)
+  s <- toupper(format(v, digits = printPrecision, decimal.mark = "."))
+  s <- sub("0.", ".", s, fixed = TRUE)
+  if (v >= 0) s <- paste0(" ", s)
+  AsString(s)
 }
 
 EvalSTRING_ <- function(x)
@@ -738,7 +748,7 @@ EvalSYST <- function(x)
 {
   # Returns the current system date-time, in seconds.
   if (!ArgsMatch(basicN, x)) return(Exit())
-  if (Value(x) != 1) return(SetIllegalQuantityError())
+  if (!any(Value(x) == c(0, 1))) return(SetIllegalQuantityError())
   AsNumber(Sys.time())
 }
 
@@ -746,14 +756,13 @@ EvalTAB <- function(x)
 {
   # Positions the cursor such that the next character will be printed in column
   # x. We extend to allow negative values to mean -x spaces from the right-hand
-  # margin. If the cursor already lies to the right of the requested position, a
-  # new line is begun. Positioning will be inaccurate when special characters
+  # margin. No action is performed when the cursor already lies at or beyond the
+  # requested position. Positioning will be inaccurate when special characters
   # (\a, \b, \t, etc.) have been placed on the line.
   if (!ArgsMatch(basicN, x)) return(Exit())
-  p <- as.integer(floor(Value(x))) %% as.integer(options("width"))
+  p <- as.integer(floor(Value(x))) %% TerminalWidth()
   k <- VirtualCursorPosition()
-  if (p < k) {PrintBufferAndNewline(); k <- 0L}
-  AdvancePrintHead(p - k)
+  if (p > k) AdvancePrintHead(p - k)
   AsOperator(";")
 }
 
@@ -768,8 +777,8 @@ EvalTTW <- function(x)
 {
   # Returns the current width of the terminal, as a number of characters.
   if (!ArgsMatch(basicN, x)) return(Exit())
-  if (Value(x) != 1) return(SetIllegalQuantityError())
-  AsNumber(options("width"))
+  if (!any(Value(x) == c(0, 1))) return(SetIllegalQuantityError())
+  AsNumber(TerminalWidth())
 }
 
 EvalVAL <- function(x)
@@ -778,7 +787,8 @@ EvalVAL <- function(x)
   # and returns the corresponding BASIC number. When x cannot be identified as
   # a number, BASIC 0 is returned (no error is raised).
   if (!ArgsMatch(basicS, x)) return(Exit())
-  n <- try(suppressWarnings(as.numeric(Value(x))), silent = TRUE)
+  s <- gsub("[[:blank:]]+", "", Value(x))
+  n <- try(suppressWarnings(as.numeric(s)), silent = TRUE)
   if (!is.finite(n) || inherits(n, "try-error")) return(AsNumber(0))
   AsNumber(n)
 }

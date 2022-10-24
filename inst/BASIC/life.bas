@@ -2,6 +2,8 @@
 # By Clark Baker.
 # From David H. Ahl & Steve North, BASIC Computer Games, Workman, 1978.
 
+# Plays Conway's 'Game of Life' deterministic cellular automaton.
+
 # Changes:
 # - Formatting of some printed output.
 # - Added authors to title, and instructions, from line 700 on.

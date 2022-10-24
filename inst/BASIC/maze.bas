@@ -2,6 +2,8 @@
 # By Richard Schaal.
 # From David H. Ahl & Steve North, More BASIC Computer Games, Workman, 1980.
 
+# Constructs mazes and solves them, by depth-first search.
+
 # Changes
 # - Appended author and year to title.
 # - Added ':DELAY 0' to the end of line 2600 (flushes the console).

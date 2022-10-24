@@ -1,3 +1,32 @@
+Version 1.0.2 (2022-10-24)
+
+  * Width of the virtual BASIC terminal is now one character less than that of
+    the parent terminal within which it is running. This is to avoid the blank
+    lines inserted by some terminals after printing against the right margin.
+  * TAB function does nothing when the cursor is already beyond the requested
+    position (as per Altair BASIC, 1975). Previously, a new line was begun and
+    the cursor repositioned on that (as per Microsoft BASIC, 1979).
+  * STR$ function output has a leading space when its argument is non-negative
+    (as per Altair BASIC, 1975). Previously, there was no space.
+  * Within PRINT statements, semicolons are implied between strings and ensuing
+    non-string operators (as per Altair BASIC, 1975). Previously, this was not
+    the case (as per Commodore BASIC, 1977), which always results in an error.
+  * PRINT and STR$ use '.' as the decimal mark, irrespective of locale (other
+    marks being incompatible with INPUT, READ, and VAL).
+  * POS, SYST, and TTW functions allow 0 as their argument (as well as 1).
+  * TAND parsed as T AND (instead of TAN D, which is always a syntax error).
+  * GOR parsed as G OR (instead of GO R, which is always a syntax error).
+  * FOR parsed as F OR, except at the very beginning of a statement (FOR).
+  * TOR parsed as T OR, except within FOR - TO statements (TO R).
+  * Parentheses remain necessary to parse XOR as (X) OR.
+  * Bug fix: VAL function wasn't ignoring whitespace.
+  * Bug fix: material in print buffer wasn't always output at the end of a run.
+  * Bug fix: the run-state wasn't being fully reset when a program was rerun
+    without reloading after the previous run was interrupted by the user.
+  * Added 'Even Wins', 'Four in a Row', 'Guess-It', 'Hexapawn', and 'Not One'
+    to the bundled BASIC listings.
+  * Vignette and manual updated.
+
 Version 1.0.1 (2022-09-13)
 
   * IF - THEN statements allow an optional ELSE clause.
@@ -7,5 +36,5 @@ Version 1.0.1 (2022-09-13)
   * DATA and REM statements are checked at load time (for NotRun() purposes).
   * NotRun() utility uses pretty = TRUE by default.
   * Tweaked life.bas to prompt for continuation at generations 20 and 50.
-  * Added animal.bas and hammurabi.bas to the bundled listings.
+  * Added 'Animal' and 'Hammurabi' to the bundled BASIC listings.
   * BASIC manual (vignette) and package manual both updated.

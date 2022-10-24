@@ -2,11 +2,16 @@
 # By Jeff Shrager.
 # From David H. Ahl & Steve North, More BASIC Computer Games, Workman, 1980.
 
+# An early natural language processing chatterbot program. The computer searches
+# for keywords in your entries, and responds appropriately in the manner of a
+# Rogerian psychotherapist (providing only the illusion of comprehension). This
+# BASIC version is less sophisticated than Joseph's original, and you need to
+# carry the conversation with longer, rather than succinct, responses.
+
 # Changes:
 # - Appended author and year to title.
 # - Added the instructions on lines 20 through 22.
 
-# This BASIC version is less sophisticated than Joseph's original.
 # As per Steve's notes, lines 120, 420, and 590 could be replaced with RESTORE
 # 2500, 1200, and 1300, respectively, while the various substring search loops
 # using MID$ could be replaced with INSTR.

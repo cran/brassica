@@ -50,7 +50,8 @@ Lines beginning with \ib{\#} are comments.
 Colons separate multiple statements on the same line.
 The presence or absence of horizontal whitespace makes no difference anywhere
 outside of string literals, \ib{DATA} values, and line numbers.
-Aside from the names of variables, the interpreter is entirely case-insensitive.
+Aside from the names of variables and user-defined functions, the interpreter is
+case-insensitive.
 
 \begin{example}
 \# infinite loop
@@ -108,14 +109,14 @@ Operators of equal precedence, such as the six relationals, are applied in
 left-to-right order.
 The equivalence operator is a single \ib{=}, which is also used for the
 assignment operator immediately after an expressed or implied \ib{LET}.
-Whitespace is ignored; be wary of \ib{F OR}, \ib{X OR}, and \ib{T AND}.
+Whitespace is ignored; be wary of \ib{X OR} and \ib{T OR} (use parentheses).
 Consecutive operators need not be separated by parentheses, but see below.
 
 \vspace{4ex}
 Logically false relations evaluate to \ib{0}, true relations to \ib{-1}.
 There is no short-circuiting.
 Relational operations are allowed between strings, and are case-insensitive
-(hence, \ib{"a" = "A"}).
+(hence, \ib{"a" = "A"}, while \ib{ASC("a") <> ASC("A")}).
 Addition of strings performs concatenation.
 
 \vspace{4ex}
@@ -159,7 +160,7 @@ A * NOT B + NOT C + NOT D + E AND F
 \phantom{=}=\quad{}A * NOT(B + NOT(C + NOT(D + E))) AND F
 \phantom{=}=\quad{}A * ((NOT B) - (NOT C) + (NOT D) - E) AND F
 \end{example}
-(This is the behaviour of Commodore 64 BASIC v2.)
+(This is the behaviour of Commodore BASIC v2.)
 
 \newpage
 \section{Commands}
@@ -184,8 +185,8 @@ Defines a custom function.
 \ib{FN} forms the beginning of its (case-sensitive) name, which must end with
 the appropriate return-type indicator (\ib{\$}, \ib{\%}, or none).\\
 \iib{DEF FNA(X) = X + C}\\
-\iib{DEF fnb\$(A\$,n) = MID\$(A\$,n,1)}\\
-\iib{PRINT FNA(7) fnb\$("ABC",2)}
+\iib{def fnc\$(a\$,n) = mid\$(a\$,n,1)}\\
+\iib{PRINT FNA(7) fnc\$("ABC",2)}
 }\yspace
 
 \bit{DELAY}{
@@ -346,10 +347,10 @@ Sends visible output to the terminal.
 Numbers are printed with a trailing space.
 Positive numbers also have a leading space (in lieu of a negative number's
 sign).
-(Use \ib{STR\$(X)} to suppress these.)
+(Use \ib{STR\$} and \ib{MID\$} to suppress these.)
 The width of the terminal is divided into `print zones' of 14 spaces each.
-Consider;\yspace\\
-\iib{PRINT A;BTAB(16)CHR\$(34)SPC(4)":",C D\$;}\yspace\\
+Consider:\yspace\\
+\iib{PRINT A;BTAB(16)CHR\$(34)SPC(4)":",C D\$E \$;}\yspace\\
 The first semicolon separates \ib{A} from \ib{B}, so we don't get the value of
 \ib{AB}.
 No semicolon is needed after \ib{B}, since the reserved word `\ib{TAB}' cannot
@@ -359,9 +360,16 @@ a double-quote.
 \ib{SPC(4)} moves the cursor four more spaces to the right, where a colon is
 printed.
 The comma then moves the cursor to the beginning of the next print zone, where
-the value of \ib{CD\$} is printed.
+the values of \ib{CD\$} and \ib{E\$} are printed.
 (Whitespace is ignored, including within keywords.)
 The final semicolon says \emph{not} to print a newline at the end.\yspace\\
+Also, while\yspace\\
+\iib{PRINT A-B;"X"+"Y";-C}\yspace\\
+prints the value of \ib{A-B}, followed by the concatenated string \ib{XY},
+followed by the value of \ib{-C}, the output is no different in the absence of
+the semicolons and plus sign.
+(Since the minus operator does not apply to strings, \ib{"Y"-C} is understood as
+two separate terms.)\yspace\\
 \ib{TAB}, \ib{SPC} and comma are rapid operations, in that they take essentially
 no time even when teletypewriter-effect options are active.
 They do not overprint existing text.
@@ -426,19 +434,24 @@ or similar.}
 is negative).
 Can only be used within \ib{PRINT} statements.}
 \bit{SQR(X)}{Square root of \ib{X}.}
-\bit{STR\$(X)}{Converts \ib{X} to character (string) representation.}
+\bit{STR\$(X)}{Converts \ib{X} to character-string representation.
+This has a leading space when \ib{X >= 0}.}
 \bit{STRING\$(N,X\$)}{Concatenates \ib{N} copies of \ib{X\$} (or \ib{N} spaces,
 should \ib{X\$} be omitted).}
 \bit{SYST(1)}{Current system date-time, in seconds.}
 \bit{TAB(X)}{Positions the cursor at column \ib{X} (or \ib{-X} spaces in from
-the right margin, if \ib{X} is negative). Can only be used within \ib{PRINT}
-statements.}
+the right margin, if \ib{X} is negative).
+Can only be used within \ib{PRINT} statements.
+Does nothing when the cursor is already at or beyond the requested position.}
 \bit{TAN(X)}{Tangent of \ib{X}.}
-\bit{TTW(1)}{Width of the terminal, in characters.}
-\bit{VAL(X\$)}{Converts \ib{X\$} to its numerical value.}\yspace\\
+\bit{TTW(1)}{Width of the BASIC terminal, in characters.
+This is normally one less than that of the parent terminal within which it is
+running.}
+\bit{VAL(X\$)}{Converts \ib{X\$} to the numerical value it represents (the
+reverse of \ib{STR\$}).}\yspace\\
 
-The dummy argument to \ib{POS}, \ib{SYST}, and \ib{TTW} must have the value
-\ib{1}.
+The value of the dummy argument to \ib{POS}, \ib{SYST}, and \ib{TTW} must be
+either \ib{1} or \ib{0}.
 \ib{POS} and \ib{TAB} will be inaccurate when special characters
 (\textbackslash{}a, \textbackslash{}b, \textbackslash{}t, etc.) have been
 printed since the last carriage return.
@@ -450,7 +463,8 @@ Functions on the left are not implemented directly.\\
 Substitute expressions from the right.
 \yspace
 
-\mat{LOG10(X)}{LOG(X)/LOG(10)}
+\mat{PI}{3.1416}
+\mat{LOGN(X)}{LOG(X)/LOG(N)}
 \mat{SEC(X)}{1/COS(X)}
 \mat{CSC(X)}{1/SIN(X)}
 \mat{COT(X)}{1/TAN(X)}
@@ -471,10 +485,9 @@ Substitute expressions from the right.
 \mat{ARSECH(X)}{LOG((SQR(1-X*X)+1)/X)}
 \mat{ARCSCH(X)}{LOG((SQR(1+X*X)*SGN(X)+1)/X)}
 \mat{ARCOTH(X)}{LOG((X+1)/(X-1))/2}
-\mat{PI}{3.1416}
 
 \end{document}
 
 % MJL @ Titirangi, 24 July 2022.
-% Last edit: 12 September 2022.
+% Last edit: 15 October 2022.
 % EOF

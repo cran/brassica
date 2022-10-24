@@ -2,6 +2,10 @@
 # By Gregory Yob.
 # From David H. Ahl & Steve North, More BASIC Computer Games, Workman, 1980.
 
+# A survival-horror game, in which the player explores a dodecahedral cave
+# system whilst attempting to deduce the location of the eponymous creature.
+# Instead of the usual grid array, the cave system is stored as a graph.
+
 # Changes:
 # - Formatting of some printed output.
 # - Added author and year to title.

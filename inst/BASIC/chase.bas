@@ -2,6 +2,8 @@
 # By Mac Oglesby, modified by Bill Cotter, improved by Arnold Loveridge.
 # From David H. Ahl & Steve North, More BASIC Computer Games, Workman, 1980.
 
+# Avoid robots in a maze, while attempting to bait them into traps.
+
 # Changes:
 # - Formatting of some printed output, especially map characters.
 # - Appended author and year to title.

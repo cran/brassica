@@ -2,6 +2,8 @@
 # By David H. Ahl.
 # From David H. Ahl & Steve North, BASIC Computer Games, Workman, 1978.
 
+# A game of resource management. An awful lot hinges on random crop yields.
+
 # Changes:
 # - It was a tough call, but this version restores the long-lost m to Hammurabi.
 # - Formatting of some printed output.
@@ -27,12 +29,12 @@
 120 INPUT"[press enter when ready]",
 210 D=0
 215 PRINT:PRINT:PRINT "Hammurabi:  I beg to report to you.": Z=Z+1
-217 PRINT "In year ";STR$(Z);",";D;"people starved,";I;"came to the city."
+217 PRINT "In year";STR$(Z);",";D;"people starved,";I;"came to the city."
 218 P=P+I
 227 IF Q>0 THEN 230
 228 P=INT(P/2)
 229 PRINT "A horrible plague struck!  Half the people died."
-230 PRINT "The population is now ";STR$(P);"."
+230 PRINT "The population is now";STR$(P);"."
 232 PRINT "The city now owns";A;"acres."
 235 PRINT "You harvested";Y;"bushels per acre."
 250 PRINT "The rats ate";E;"bushels."
@@ -104,7 +106,7 @@
 566 PRINT "been impeached and thrown out of office, but you have"
 567 PRINT "also been declared national fink!!!!": GOTO 990
 710 PRINT "Hammurabi:  Think again.  You have only"
-711 PRINT STR$(S);" bushels of grain.  Now then,"
+711 PRINT MID$(STR$(S),2);" bushels of grain.  Now then,"
 712 RETURN
 720 PRINT "Hammurabi:  Think again.  You own only";A;"acres.  Now then,"
 730 RETURN
@@ -115,9 +117,9 @@
 857 GOTO 990
 860 PRINT "In your 10-year term of office,";P1;"percent of the"
 862 PRINT "population starved per year on the average, i.e. a total of"
-865 PRINT STR$(D1);" people died!!": L=A/P
+865 PRINT MID$(STR$(D1),2);" people died!!": L=A/P
 870 PRINT "You started with 10 acres per person and ended with"
-875 PRINT STR$(L);" acres per person.": PRINT
+875 PRINT MID$(STR$(L),2);" acres per person.": PRINT
 880 IF P1>33 THEN 565
 885 IF L<7 THEN 565
 890 IF P1>10 THEN 940

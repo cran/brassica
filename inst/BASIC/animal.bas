@@ -2,6 +2,8 @@
 # By Arthur Luehrmann.
 # From David H. Ahl & Steve North, BASIC Computer Games, Workman, 1978.
 
+# The computer constructs a decision tree to distinguish different animals.
+
 # Changes:
 # - Formatting of some printed output.
 # - Appended author and year to title.
@@ -54,7 +56,7 @@
 340 A$(0)=STR$(Z1+2)
 350 A$(Z1)=A$(K)
 360 A$(Z1+1)="\A"+V$
-370 A$(K)="\Q"+X$+"\"+A$+STR$(Z1+1)+"\"+B$+STR$(Z1)+"\"
+370 A$(K)="\Q"+X$+"\"+A$+MID$(STR$(Z1+1),2)+"\"+B$+MID$(STR$(Z1),2)+"\"
 380 GOTO 120
 390 REM     SUBROUTINE TO PRINT QUESTIONS
 400 Q$=A$(K)

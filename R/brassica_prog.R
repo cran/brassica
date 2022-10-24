@@ -1,6 +1,6 @@
 # BASIC program storage, state, and flow.
 # MJL @ Titirangi, 3 August 2022.
-# Last edit: 12 September 2022.
+# Last edit: 15 October 2022.
 
 ################################################################################
 # Storage space for one BASIC program and its run-state.
@@ -10,35 +10,73 @@ progMemory <- new.env(parent = emptyenv())
 ################################################################################
 # Constant object names.
 
+# Reserved words.
+reservedWords     <- "rw" # BASIC keywords, functions, and logical operators.
+
+# Program storage.
 basicProgram      <- "bp" # Raw program listing, as it appears in the file.
 basicStatements   <- "bs" # Program listing, deconstructed to statements.
 checkedStatements <- "cs" # Logs which statements have successfully executed.
+dataQueue         <- "dl" # Character vector of all data items in the program.
+fileLineNumbers   <- "fn" # Source-file line number of each program line.
+lineNumbers       <- "ln" # The BASIC line number of each program line.
+
+# Program state.
 cursorPosition    <- "cp" # Zero-indexed console column of the print cursor.
 dataIndex         <- "di" # Index number of the next data item to read.
-dataQueue         <- "dl" # Character vector of all data items in the program.
 exitTrigger       <- "et" # The first error or break condition to have occurred.
-fileLineNumbers   <- "fn" # Source-file line number of each program line.
 lastRandomNumber  <- "lr" # The last pseudo-random variate generated.
 lineIndex         <- "li" # Index number of the current program line.
-lineNumbers       <- "ln" # The BASIC line number of each program line.
 loopPoints        <- "lp" # FOR-loop return points and conditions.
 printBuffer       <- "pb" # Character strings, ready to be printed.
 printedChars      <- "pc" # Characters already printed on the current line.
-reservedWords     <- "rw" # BASIC keywords, functions, and logical operators.
 returnPoints      <- "rp" # GOSUB return-point stack (for RETURN commands).
 statementIndex    <- "si" # Index of the current statement on the current line.
+
+# Aesthetic options.
 ttCharDelay       <- "tx" # Teletypewriter delay after printing each character.
 ttLineDelay       <- "ty" # Teletypewriter delay after printing each line.
 upperCase         <- "uc" # Whether or not to force upper-case printing.
 
 ################################################################################
+# Derived constant lists.
+
+# BASIC-program storage objects to delete before loading a new program.
+progStore <- c(basicProgram, basicStatements, checkedStatements, dataQueue,
+                fileLineNumbers, lineNumbers)
+
+# BASIC-program run-state objects to delete before beginning a new run.
+# (The last random number is not to be deleted in this situation).
+progState <- c(cursorPosition, dataIndex, exitTrigger, lineIndex, loopPoints,
+                printBuffer, printedChars, returnPoints, statementIndex)
+
+################################################################################
 # Clear program memory.
 
-ResetProgMemory <- function()
+ResetProgFull <- function()
 {
   # Delete the program and its state, leaving only the (constant) reserved words
   # look-up table, and the initial random number, on an otherwise clean slate.
   remove(list = ls(progMemory), pos = progMemory)
+  SetReservedWords()
+  GetNewRandomNumber()
+}
+
+ResetProgMemory <- function()
+{
+  # Deletes the program and its run-state, without affecting the reserved words
+  # table, the random number generator, or any aesthetic options.
+  s <- ls(progMemory)
+  remove(list = s[s %in% c(progState, progStore)], pos = progMemory)
+}
+
+ResetProgState <- function()
+{
+  # Deletes the program run-state, without touching aesthetic options or the
+  # loaded program. Ensures the reserved words table is loaded, and that the
+  # pseudo-random number generator is primed.
+  s <- ls(progMemory)
+  remove(list = s[s %in% progState], pos = progMemory)
   SetReservedWords()
   GetNewRandomNumber()
 }
@@ -227,7 +265,7 @@ ReadBundled <- function(f)
 {
   # If f is the name of an included BASIC program, return that program as a
   # character vector. Otherwise, return NULL.
-  g <- tolower(gsub("[[:blank:]]+", "_", f))
+  g <- tolower(gsub("[[:blank:]_-]+", "", f))
   g <- system.file("BASIC", paste0(g, ".bas"), package = "brassica")
   ReadExternal(g)
 }
@@ -320,6 +358,9 @@ SpaceFreeLine <- function(s)
 SetReservedWords <- function()
 {
   # Builds a constant look-up table of BASIC's reserved words, at load-time.
+  # Since the table is a constant, we don't rebuild it if it already exists.
+  w <- GetPro(reservedWords, NULL)
+  if (!is.null(w)) return(w)
   w <- c(keywords, functions, operatorWords)
   w <- w[order(nchar(w), w)]
   i <- grepl("[$]$", w)
@@ -1063,7 +1104,7 @@ ReducePrintBuffer <- function()
 {
   # When printing of the buffer would extend beyond the width of the console, we
   # print however much fits and then begin a new line.
-  w <- as.integer(options("width"))
+  w <- TerminalWidth()
   while(VirtualCursorPosition() > w)
   {
     n <- w - GetCursorPosition()
@@ -1078,6 +1119,15 @@ SetPrintBuffer <- function(s)
 {
   # Sets the print buffer to character vector s.
   SetPro(printBuffer, s)
+}
+
+TerminalWidth <- function()
+{
+  # Returns the width of the virtual BASIC terminal, in characters. This is one
+  # character less than that of the parent terminal in which it is running.
+  # The reason for this, is that some terminals wrap text automatically and some
+  # of those insert blank lines after printing against the right-hand margin.
+  getOption("width", 73L) - 1L
 }
 
 ################################################################################

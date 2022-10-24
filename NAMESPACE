@@ -1,5 +1,6 @@
 importFrom("stats", "runif")
 importFrom("utils", "flush.console")
 
-export(RUN, LIST)
-export(NotRun, UpperCode, LowerCode)
+export(RUN)
+export(LIST, NotRun)
+export(UpperCode, LowerCode)

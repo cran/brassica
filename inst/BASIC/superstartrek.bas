@@ -2,6 +2,9 @@
 # By Bob Leedon & Dave Ahl.
 # From David H. Ahl & Steve North, BASIC Computer Games, Workman, 1978.
 
+# Explore the galaxy in the Enterprise, to locate and destroy Klingon invaders.
+# Involves copious angular and vector calculations.
+
 # Changes:
 # - Formatting of some printed output.
 # - Appended the instructions from line 10000, and a GOSUB to them from line 20.
@@ -90,7 +93,7 @@
 1230 PRINT"Your orders are as follows:"
 1240 PRINT"   Destroy the";K9;"Klingon warships which have invaded the"
 1252 PRINT"   galaxy before they can attack Federation headquarters"
-1260 PRINT"   on stardate ";STR$(T0+T9);".  This gives you";T9;"days.";
+1260 PRINT"   on stardate";STR$(T0+T9);".  This gives you";T9;"days.";
 1262 PRINT"  There";X0$
 1272 PRINT"  ";B9;"starbase";X$;" in the galaxy for resupplying your ship."
 1280 PRINT
@@ -147,11 +150,11 @@
 2380 IFW1>0ANDW1<=8THEN2490
 2390 IFW1=0THEN1990
 2420 PRINT"   Chief Engineer Scott reports  'The engines won't take";
-2430 PRINT" warp ";STR$(W1);"!'":GOTO1990
+2430 PRINT" warp";STR$(W1);"!'":GOTO1990
 2470 PRINT"Warp engines are damaged.  Maximum speed = warp 0.2.":GOTO1990
 2490 N=INT(W1*8+.5):IFE-N>=0THEN2590
 2500 PRINT"Engineering reports   'Insufficient energy available"
-2510 PRINT"                       for maneuvering at warp ";STR$(W1);"!'"
+2510 PRINT"                       for maneuvering at warp";STR$(W1);"!'"
 2530 IFS<N-EORD(7)<0THEN1990
 2550 PRINT"Deflector control room acknowledges";S;"units of energy"
 2560 PRINT"                         presently deployed to shields."
@@ -199,7 +202,7 @@
 3810 PRINT"  'Permission to attempt crossing of galactic perimeter"
 3820 PRINT"  is hereby *denied*.  Shut down your engines.'"
 3830 PRINT"Chief Engineer Scott reports  'Warp engines shut down"
-3840 PRINT"  at sector";S1;",";S2;"of quadrant";Q1;", ";STR$(Q2);".'"
+3840 PRINT"  at sector";S1;",";S2;"of quadrant";Q1;",";STR$(Q2);".'"
 3850 IFT>T0+T9THEN6220
 3860 IF8*Q1+Q2=8*Q4+Q5THEN3370
 3870 T=T+1:GOSUB3910:IFT>T0+T9THEN6220
@@ -309,7 +312,7 @@
 6170 PRINT"Damage Control reports '";G2$;" damaged by the hit.'"
 6200 NEXTI:RETURN
 6210 REM END OF GAME
-6220 PRINT"It is stardate ";STR$(T);".";:IFT<=T0+T9THENPRINT:GOTO 6270
+6220 PRINT"It is stardate";STR$(T);".";:IFT<=T0+T9THENPRINT:GOTO 6270
 6225 PRINT"  Time is up.":GOTO 6270
 6240 PRINT:PRINT"The Enterprise has been destroyed."
 6250 PRINT"The Federation will be conquered.":PRINT:GOTO 6220

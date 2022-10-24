@@ -1,5 +1,6 @@
 # BASIC interpreter.
 # MJL @ Titirangi, 3 August 2022.
+# Last edit: 12 October 2022.
 
 ################################################################################
 # Primary function.
@@ -18,12 +19,14 @@ RUN <- function(program = NULL, ttx = 0, tty = 0, up = FALSE)
   #   but flushes the console after each complete line of printed output.
   # Returns:
   #   Invisible NULL. BASIC-program output will appear on standard output.
-  if (length(program) > 0L) Load(program)
-  SetAesthetics(ttx, tty, up)
+  ResetProgState()
   ResetHeapMemory()
+  SetAesthetics(ttx, tty, up)
+  if (length(program) > 0L) Load(program)
   GoToFirstDatum()
   GoToFirstStatement()
   while(Running() && WithinProgram()) Enact(GetStatement())
+  PrintFinalBuffer()
   PrintExitMessage()
 }
 

@@ -2,6 +2,8 @@
 # By (at least, from) the Heath Users Group.
 # From David H. Ahl & Steve North, More BASIC Computer Games, Workman, 1980.
 
+# Flee across the desert. Your camel and pursuers move by random walk processes.
+
 # Changes:
 # - Formatting of some printed output.
 # - Appended author and year to title.

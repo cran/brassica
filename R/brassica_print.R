@@ -1,5 +1,6 @@
 # Evaluation and printing of PRINT statements (and INPUT prompts).
 # MJL @ Titirangi, 11 August 2022.
+# Last edit: 4 October 2022.
 
 ################################################################################
 # Term separators. These symbols delimit individual PRINT terms, expand to
@@ -75,7 +76,7 @@ FormatPrintable <- function(x)
 {
   # Formats a BASIC string or number, x, to a print-ready R string.
   if (IsString(x)) return(Value(x))
-  n <- toupper(format(Value(x), digits = printPrecision))
+  n <- toupper(format(Value(x), digits = printPrecision, decimal.mark = "."))
   if (BeginsWith("0.", n)) n <- substring(n, 2L) else
   if (BeginsWith("-0.", n)) n <- paste0("-", substring(n, 3L))
   paste0(strrep(" ", !BeginsWith("-", n)), n, " ")
@@ -93,12 +94,18 @@ FormatSeparator <- function(x)
 InteriorTermHasEnded <- function(a, s)
 {
   # Returns TRUE on reaching the end of an interior PRINT term. This occurs when
-  # the last component of the current term, a, is a separator, or else when that
-  # same component is a data value and the remaining unevaluated statement, s,
-  # following it is both non-empty and does not begin with a binary operator. We
-  # have to look ahead on s, instead of just evaluating the next term, in case
-  # it calls POS(1) (with the current term not yet committed to the buffer).
-  IsSeparator(a) || (IsEvaluated(a) && nzchar(s) && !BeginsWithAny(binaries, s))
+  # the last component of the current term, a, is a separator, a number followed
+  # by something other than a binary operator, or a string followed by something
+  # other than a string operator. When a is not a separator, and the remaining
+  # unevaluated statement, s, is empty, this is a final term (not an interior
+  # term). We have to look ahead on s, instead of just evaluating the next term,
+  # in case it calls POS(1) (with the current term not yet committed to the
+  # buffer).
+  if (IsSeparator(a)) return(TRUE)
+  if (!nzchar(s)) return(FALSE)
+  if (IsString(a)) return(!BeginsWithAny(stringOps, s))
+  if (IsNumber(a)) return(!BeginsWithAny(binaries, s))
+  FALSE
 }
 
 IsolateSeparator <- function(s)
@@ -136,7 +143,7 @@ SkipToPrintZone <- function()
   # buffer contains special or non-printing characters.
   p <- VirtualCursorPosition()
   s <- printZoneWidth - p %% printZoneWidth
-  w <- as.integer(options("width"))
+  w <- TerminalWidth()
   if ((p + s) < w) AdvancePrintHead(s) else PrintBufferAndNewline()
   ""
 }
@@ -150,7 +157,7 @@ SpaceToFillPrintZone <- function()
   # replaced with SkipToPrintZone(). We retain it, in case we want those delays.
   p <- VirtualCursorPosition()
   w <- printZoneWidth - p %% printZoneWidth
-  if ((p + w) < as.integer(options("width"))) return(strrep(" ", w))
+  if ((p + w) < TerminalWidth()) return(strrep(" ", w))
   PrintBufferAndNewline()
   ""
 }
@@ -215,6 +222,15 @@ PrintExitMessage <- function()
   m <- GetExitMessage()
   if (any(nzchar(m))) {Print(m); PrintNewLine()}
   DelPro(exitTrigger)
+}
+
+PrintFinalBuffer <- function()
+{
+  # Prints anything sitting in the print buffer, then prints a new line if the
+  # current line is not empty (these two actions are independent). Called on
+  # termination of a BASIC program, just before printing any exit message.
+  PrintNonEmptyBuffer()
+  if (nzchar(GetCharactersOnLine())) PrintNewLine()
 }
 
 PrintNewLine <- function()
